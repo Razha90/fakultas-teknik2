@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tagesschrift&display=swap');
+@import 'tailwindcss';
+@import "tailwindcss-animated";
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-primary: #079f56; /* hijau */
+    --color-primary-dark: #006534;
+    --color-primary-light: #22cd6f;
+    --color-secondary-warn: #f8c50f; /* kuning */
+    --color-secondary: #181b31;
+    --color-accent-white: #ffffff; /* putih */
+    --color-secondary-accent: #141622;
+
+    --max-width: 1920px;
+    --breakpoint-nav-1: 1083px;
+    --breakpoint-nav-2: 640px;
+    --breakpoint-nav-3: 550px;
+    --breakpoint-ftnews-1: 408px;
+
+
+    --breakpoint-event-1: 838px;
+    --breakpoint-linked-1: 799px;
+
+    --font-merriweather: 'Merriweather', serif;
+    --font-tagesschrift: 'Tagesschrift', system-ui;
+
+    --animate-growing:growing 1s ease-out forwards;
+    @keyframes growing {
+        0% { height: 0%; }
+        100% { height: 100%; }
+      }
+    --animate-wiggle: wiggle 1s ease-in-out infinite;
+    @keyframes wiggle {
+      0%,
+      100% {
+        transform: rotate(-3deg);
+      }
+      50% {
+        transform: rotate(3deg);
+      }
+    }
+}
+
+@layer theme {
+
+}
+
+@layer base {
+
+}
+

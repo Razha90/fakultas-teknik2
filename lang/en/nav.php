@@ -1,0 +1,25 @@
+<?php
+// english
+return [
+  'profile' => 'Profile',
+  'jurusan_dan_program_studi' => 'Department & Study Program',
+  'mutu_internal' => 'Internal Quality',
+  'zona_integritas' => 'Integrity Zone',
+  'Hubungi Kami' => 'Contact Us',
+  'about' => 'About FT',
+  'profile_short' => 'Short Profile',
+  'symbols.mottos.logos' => 'Symbols, Mottos, and Logos',
+  'hymne.mars' => 'Hymn and Mars',
+  'cooperation' => 'Cooperation',
+  'performance' => 'Performance',
+  'statistic' => 'Statistic',
+  'history' => 'History',
+  'vision.misi' => 'Vision and Mission',
+  'organize' => 'Organization',
+  'akreditasi' => 'Accreditation',
+  'documents' => 'Documents',
+  'info.money' => 'Financial Information',
+  'academic' => 'Academic',
+  'campus_alive' => 'Campus Life',
+  'seach' => 'Search',
+];

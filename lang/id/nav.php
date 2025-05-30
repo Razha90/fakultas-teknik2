@@ -1,0 +1,25 @@
+<?php
+// indonesia
+return [
+  'profile' => 'Profil',
+  'jurusan_dan_program_studi' => 'Jurusan & Program Studi',
+  'mutu_internal' => 'Mutu Internal',
+  'zona_integritas' => 'Zona Integritas',
+  'Hubungi Kami' => 'Hubungi Kami',
+  'about' => 'Tentang FT',
+  'profile_short' => 'Profil Singkat',
+  'symbols.mottos.logos' => 'Lambang, Motto, dan Logo',
+  'hymne.mars' => 'Hymne dan Mars',
+  'cooperation' => 'Kerjasama',
+  'performance' => 'Prestasi',
+  'statistic' => 'Statistik',
+  'history' => 'Sejarah',
+  'vision.misi' => 'Visi dan Misi',
+  'organize' => 'Organisasi',
+  'akreditasi' => 'Akreditasi',
+  'documents' => 'Dokumen',
+  'info.money' => 'Info Keuangan',
+  'academic' => 'Akademik',
+  'campus_alive' => 'Kehidupan Kampus',
+  'seach' => 'Pencarian',
+];
