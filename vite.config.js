@@ -8,7 +8,7 @@ export default defineConfig({
     base: 'https://fakultas-teknik-production.up.railway.app/',
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/moment.js', 'resources/js/app-bootstrap.js'],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/moment.js', 'resources/js/app-bootstrap.js', 'resources/js/editor.js'],
             refresh: [`resources/views/**/*`],
         }),
         tailwindcss(),
