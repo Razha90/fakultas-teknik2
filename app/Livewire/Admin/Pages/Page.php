@@ -5,11 +5,13 @@ namespace App\Livewire\Admin\Pages;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use App\Models\Page as PageModel;
 
 class Page extends Component
 {
+    public $data;
     public function addPage()
     {
         try {
@@ -26,11 +28,6 @@ class Page extends Component
             $page = PageModel::create([
                 'user_id' => $userId,
                 'name' => $newPageName,
-                // 'data' => null,
-                // 'path' => null,
-                // 'release' => null,
-                // 'keywords' => null,
-                // 'description' => null,
             ]);
             Redirect::route('page-edit', ['id' => $page->id]);
             return;
@@ -42,10 +39,47 @@ class Page extends Component
         }
     }
 
+    public function mount() {
+        $this->getData();
+    }
+
+    public function getData() {
+        try {
+            $pages = PageModel::with('menu')->get();
+            $this->data = $pages->toArray();
+        } catch (\Throwable $th) {
+            Log::error('Error fetching pages data: ' . $th->getMessage());
+            $this->data = [];
+            $this->dispatch('failed', [
+                'message' => 'Terjadi kesalahan saat mengambil data halaman.',
+            ]);
+        }
+    }
+
+    public function deletePage($id)
+    {
+        try {
+            $page = PageModel::with('files')->findOrFail($id);
+            foreach ($page->files as $file) {
+                if (Storage::disk('public')->exists($file->path)) {
+                    Storage::disk('public')->delete($file->path);
+                }
+            }
+            $page->files()->delete();
+            $page->delete();
+            $this->getData();
+            $this->dispatch('success', [
+                'message' => 'Halaman berhasil dihapus.',
+            ]);
+        } catch (\Throwable $th) {
+            Log::error('Error deleting page: ' . $th->getMessage());
+            $this->dispatch('failed', [
+                'message' => 'Terjadi kesalahan saat menghapus halaman.',
+            ]);
+        }
+    }
     public function render()
     {
-        return view('livewire.admin.pages.page', [
-            'pages' => PageModel::with('user')->get(),
-        ]);
+        return view('livewire.admin.pages.page');
     }
 }

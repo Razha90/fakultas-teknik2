@@ -4,7 +4,7 @@
             <span class="db"><img src="{{asset('sbAdmin/img/unimed.png')}}" width="30%" alt="logo" /></span>
             <br><br>
             <h5 class="font-medium m-b-20">Sign In to Admin</h5>
-        </div>z
+        </div>
         <!-- Form -->
         <div class="row">
             <div class="col-12">

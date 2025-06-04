@@ -93,10 +93,11 @@
         shown: false,
         search: '',
         navigate() {
-            goToPage('http://127.0.0.1:8001/search' + '?search=' + this.search);
+            goToPage('/search' + '?search=' + this.search);
         }
     
-    }" x-on:searching.window="(event) => {
+    }"
+        x-on:searching.window="(event) => {
         shown = true;
         $nextTick(() => $refs.searchInput.focus());
     }"
@@ -136,8 +137,23 @@
         </div>
     </div>
 
-    <nav x-cloak x-data="{ shown: false, haveOne: '' }" x-on:navigation.window="(event) => {
+    <nav x-cloak x-data="{
+        shown: false,
+        haveOne: '',
+        menus: [],
+        resolvePath(itemPath, childPath) {
+            try {
+                new URL(childPath);
+                return childPath;
+            } catch (e) {
+                return itemPath + childPath;
+            }
+        }
+    }"
+        x-on:navigation.window="(event) => {
         shown = true;
+        menus = event.detail.menus;
+        console.log(menus);
     }"
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="translate-x-full opacity-0 bg-secondary-accent/0"
@@ -146,9 +162,29 @@
         x-transition:leave-end="translate-x-full opacity-0"
         class="bg-secondary-accent/30 fixed inset-0 z-50 flex justify-end" x-show="shown">
         <div class="bg-secondary-accent/80 relative h-full max-w-[300px] overflow-y-auto" @click.away="shown=false">
-            <div>
+            <!-- <div>
                 <div class="text-accent-white mt-16 pl-4 pr-5 text-xl">
                     <div class="" x-data="{ height: '' }">
+                         <template x-if="menus && menus.length > 0">
+                            <template x-for="(item, index) in menus" :key="">
+                                <div class="group flex cursor-pointer flex-row items-center justify-between gap-x-1"
+                                    @click="haveOne = haveOne === item.id ? '' : item.id; height = $refs.menu.scrollHeight;">
+                                    <div x-bind:class="haveOne == item.id ? 'text-secondary-warn' : 'text-accent-white'"
+                                        class="group-hover:text-secondary-warn transition-all" x-text="item.name">
+                                        </div>
+                                    <div class="flex flex-row">
+                                        <div class="group-hover:bg-secondary-warn h-[2px] w-[10px] rounded-full transition-all"
+                                            x-bind:class="haveOne == item.id ? 'rotate-0 bg-secondary-warn' :
+                                                'rotate-45 bg-accent-white'">
+                                        </div>
+                                        <div class="bg-accent-white group-hover:bg-secondary-warn relative right-1 h-[2px] w-[10px] rounded-full transition-all"
+                                            x-bind:class="haveOne == item.id ? 'rotate-0 bg-secondary-warn' :
+                                                '-rotate-45 bg-accent-white'">
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </template>
                         <div class="group flex cursor-pointer flex-row items-center justify-between gap-x-1"
                             @click="haveOne = haveOne === 'about' ? '' : 'about'; height = $refs.menu.scrollHeight;">
                             <div x-bind:class="haveOne == 'about' ? 'text-secondary-warn' : 'text-accent-white'"
@@ -413,7 +449,72 @@
                         </ul>
                     </div>
                 </div>
+            </div> -->
+            <div class="hover:text-secondary-warn text-accent-white absolute right-5 top-5 cursor-pointer transition-all hover:rotate-90"
+                @click="shown=false">
+                <svg class="h-[25px] w-[25px]" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                        <path fill="currentColor"
+                            d="M195.2 195.2a64 64 0 0 1 90.496 0L512 421.504 738.304 195.2a64 64 0 0 1 90.496 90.496L602.496 512 828.8 738.304a64 64 0 0 1-90.496 90.496L512 602.496 285.696 828.8a64 64 0 0 1-90.496-90.496L421.504 512 195.2 285.696a64 64 0 0 1 0-90.496z">
+                        </path>
+                    </g>
+                </svg>
             </div>
+            <div class="h-[50px]"></div>
+            <template x-if="menus && menus.length > 0">
+                <template x-for="(item, index) in menus" :key="item.id">
+                    <div>
+                        <div class="text-accent-white mt-3 pl-4 pr-5 text-xl">
+                            <div class="" x-data="{ height: '' }">
+                                <template x-if="item.pages && item.pages.length > 0">
+                                    <div class="group flex cursor-pointer flex-row items-center justify-between gap-x-1"
+                                        @click="height = $refs.menu.scrollHeight; haveOne = haveOne === item.id ? '' : item.id">
+                                        <div x-bind:class="haveOne == item.id ? 'text-secondary-warn' : 'text-accent-white'"
+                                            class="group-hover:text-secondary-warn transition-all" x-text="item.name">
+                                        </div>
+                                        <div class="flex flex-row">
+                                            <div class="group-hover:bg-secondary-warn h-[2px] w-[10px] rounded-full transition-all"
+                                                x-bind:class="haveOne == item.id ? 'rotate-0 bg-secondary-warn' :
+                                                    'rotate-45 bg-accent-white'">
+                                            </div>
+                                            <div class="bg-accent-white group-hover:bg-secondary-warn relative right-1 h-[2px] w-[10px] rounded-full transition-all"
+                                                x-bind:class="haveOne == item.id ? 'rotate-0 bg-secondary-warn' :
+                                                    '-rotate-45 bg-accent-white'">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template x-if="item.pages && item.pages.length > 0">
+                                    <ul x-ref="menu"
+                                        x-bind:style="haveOne == item.id ? `height: ${height}px` : 'height: 0px'"
+                                        class="mt-2 space-y-3 overflow-hidden pl-3 transition-all duration-300 ease-in-out">
+                                        <template x-for="(child, col) in item.pages" :key="child.id">
+                                            <li @click="goToPage(resolvePath(item.path, child.path))"
+                                                class="group flex cursor-pointer flex-row items-center gap-x-5">
+                                                <div
+                                                    class="bg-accent-white group-hover:bg-secondary-warn h-[4px] w-[4px] rounded-full transition-all">
+                                                </div>
+                                                <p class="text-accent-white group-hover:text-secondary-warn transition-colors"
+                                                    x-text="child.name">
+                                                </p>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+
+                                <template x-if="!item.pages || item.pages.length == 0">
+                                    <div class="" @click="goToPage(item.path)" x-text="item.name">
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </template>
             <div class="nav-3:hidden animate-fade flex w-full items-center justify-center gap-x-5">
                 <div class="nav-2:py-10 hover:text-secondary-warn ml-3 block cursor-pointer py-5 text-white"
                     @click="$dispatch('searching'); shown=false">
@@ -514,27 +615,25 @@
                 </div>
             </div>
         </div>
-
     </nav>
 
     <livewire:component.footer />
 
-
     <div x-cloak x-data="{ showTop: false }"
-     @scroll.window="
+        @scroll.window="
         showTop = (
             document.body.scrollHeight > window.innerHeight &&
             (window.scrollY / (document.body.scrollHeight - window.innerHeight)) > 0.5
         )
     ">
-    <button x-show="showTop" x-transition @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
-        class="bg-secondary-warn/70 hover:bg-secondary-warn fixed bottom-5 right-5 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 p-4 text-lg font-semibold text-white shadow-md transition-colors duration-300 md:bottom-10 md:right-10">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
-            <path d="M12 4l8 8h-6v8h-4v-8H4l8-8z" />
-        </svg>
-        <span class="sr-only">Go to top</span>
-    </button>
-</div>
+        <button x-show="showTop" x-transition @click="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            class="bg-secondary-warn/70 hover:bg-secondary-warn fixed bottom-5 right-5 z-40 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 p-4 text-lg font-semibold text-white shadow-md transition-colors duration-300 md:bottom-10 md:right-10">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6">
+                <path d="M12 4l8 8h-6v8h-4v-8H4l8-8z" />
+            </svg>
+            <span class="sr-only">Go to top</span>
+        </button>
+    </div>
 
 </body>
 <script>
@@ -544,7 +643,7 @@
 
     const currentPath = location.pathname;
     const scrollKey = "savedScroll";
-    
+
     window.addEventListener("beforeunload", () => {
         localStorage.setItem(scrollKey, JSON.stringify({
             path: currentPath,

@@ -10,7 +10,7 @@ class Category extends Model
 {
     //
     use HasUuids;
-
+    protected $table = 'categories_raffi';
     public $incrementing = false;
     protected $keyType = 'string';
     protected $fillable = ['name'];

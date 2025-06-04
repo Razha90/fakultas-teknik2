@@ -9,6 +9,12 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group( function () {
-    Route::post('/save/{id}', [Editor::class, 'saveData'])->name('saveData');
+    Route::post('/page/save/{id}', [Editor::class, 'saveData'])->name('saveData');
     Route::get('/page/{id}', [Editor::class, 'getPage'])->name('getPage');
+    Route::post('/page/compile/{id}/', [Editor::class, 'saveCompile'])->name('saveCompile');
+    Route::post('/upload/image', [Editor::class, 'uploadImage'])->name('upload-image');  
+    
+    Route::post('/news-save/{id}', [Editor::class, 'saveNews'])->name('newsData');
+    Route::get('/news-get/{id}', [Editor::class, 'getNews'])->name('getNews');
+    Route::post('/news-compile/{id}/', [Editor::class, 'compileNews'])->name('newsCompile');
 });

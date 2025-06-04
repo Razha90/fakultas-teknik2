@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\LanguageController;
+use App\Livewire\Admin\Category\CategoryIndex;
+use App\Livewire\Admin\News\NewsIndex;
+use App\Models\Menu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +24,7 @@ use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Test;
 use App\Livewire\Admin\Pages\Page;
 use App\Livewire\Admin\Users\UserProfile;
+use App\Livewire\Admin\Menu\MenuIndex;
 
 Route::get('lang', [LanguageController::class, 'change'])->name('change.lang');
 
@@ -64,7 +68,10 @@ Volt::route('profile', 'profile')->name('profile');
 //     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 // });
 
-Route::get('/dashboard', Dashboard::class)->name('dashboard');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+});
+
 Route::get('/dashboard/test', Test::class)->name('dashboard.test');
 Route::get('/users/profile', UserProfile::class)->name('users.profile');
 
@@ -88,5 +95,16 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::get('/users/create', UserCreate::class)->name('users.create');
     Route::get('/contentType', ContentTypeList::class)->name('contentType.index');
     Route::get('/pages', Page::class)->name(name: 'pages.index');
-    Volt::route('/page/{id}', 'edit-page')->name('page-edit');
+    Route::get('/menu', MenuIndex::class)->name(name: 'menu.index');
+    Route::get('/news-index', NewsIndex::class)->name('news.index');
+    Route::get('/category', CategoryIndex::class)->name('category.index');
+    Volt::route('/pages/{id}', 'admin.pages.edit-page')->name('page-edit');
+    Volt::route('/news-edit/{id}', 'admin.news.news-edit')->name('news-edit');
 });
+
+// Route::get('{any}', function () {
+//     return view('app');
+// })->where('any', '.*');
+// Volt::route('/razha/{any}', 'handle-page')->name('handle-pages');
+
+Volt::route('{any}', 'handle-page')->where('any', '.*')->name('handle-page');

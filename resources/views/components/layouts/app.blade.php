@@ -92,6 +92,7 @@
 
             <!-- Heading -->
             <!-- Data Fakultas -->
+
             @auth
                 @if (Auth::user()->role === 'admin')
                     <!-- Hanya untuk Admin: Master Content & Setting Users -->
@@ -177,9 +178,27 @@
                     </li>
 
                     <li class="nav-item">
+                        <a class="nav-link" wire:navigate href="/menu">
+                            <i class="bi bi-menu-button"></i>
+                            <span>Menu</span></a>
+                    </li>
+
+                    <li class="nav-item">
                         <a class="nav-link" wire:navigate href="/pages">
                             <i class="bi bi-file-earmark"></i>
                             <span>Halaman</span></a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" wire:navigate href="{{ route('category.index') }}">
+                            <i class="bi bi-tags"></i>
+                            <span>Kategori</span></a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" wire:navigate href="{{ route('news.index') }}">
+                            <i class="bi bi-newspaper"></i>
+                            <span>Berita</span></a>
                     </li>
                 @endif
             @endauth
@@ -209,7 +228,92 @@
                 <!-- Topbar -->
                 <nav class="navbar navbar-expand navbar-light topbar static-top mb-4 bg-white shadow">
 
-                    <!-- Sidebar Toggle (Topbar) -->
+                    <div x-cloak x-data="{ locale: '{{ Cookie::get('locale', 'id') }}', lang_id: '{{ route('change.lang', ['lang' => 'id']) }}', lang_en: '{{ route('change.lang', ['lang' => 'en']) }}', enter: false, clicked: false }"
+                        @click="window.location.href = locale == 'id' ? lang_en : lang_id; clicked=true"
+                        class="nav-3:flex nav-2:py-10 w-[51px] h-[25px] animate-fade hidden cursor-pointer items-center justify-center py-5  ml-10"
+                        @mouseenter="enter = true" @mouseleave="if (!clicked) enter = false">
+                        <template x-cloak x-if="locale == 'en'">
+                            <div class="relative flex flex-row items-center gap-x-1 rounded-full bg-green-400 w-[51px] h-[25px]">
+                                <p class="absolute left-2 text-base m-0">Id</p>
+                                <div class="h-[25px] w-[25px] overflow-hidden rounded-full shadow-2xl transition-all"
+                                    :class="{
+                                        'translate-x-[28px]': enter,
+                                        'translate-x-[2px]': !enter
+                                    }">
+
+                                    <svg class="w-[35px]" x-show="!enter" xmlns="http://www.w3.org/2000/svg"
+                                        id="flag-icons-us" viewBox="0 0 640 480">
+                                        <path fill="#bd3d44" d="M0 0h640v480H0" />
+                                        <path stroke="#fff" stroke-width="37"
+                                            d="M0 55.3h640M0 129h640M0 203h640M0 277h640M0 351h640M0 425h640" />
+                                        <path fill="#192f5d" d="M0 0h364.8v258.5H0" />
+                                        <marker id="us-a" markerHeight="30" markerWidth="30">
+                                            <path fill="#fff" d="m14 0 9 27L0 10h28L5 27z" />
+                                        </marker>
+                                        <path fill="none" marker-mid="url(#us-a)"
+                                            d="m0 0 16 11h61 61 61 61 60L47 37h61 61 60 61L16 63h61 61 61 61 60L47 89h61 61 60 61L16 115h61 61 61 61 60L47 141h61 61 60 61L16 166h61 61 61 61 60L47 192h61 61 60 61L16 218h61 61 61 61 60z" />
+                                    </svg>
+                                    <svg x-show="enter" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"
+                                        xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+                                        class="iconify iconify--emojione" preserveAspectRatio="xMidYMid meet"
+                                        fill="#000000">
+                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                        </g>
+                                        <g id="SVGRepo_iconCarrier">
+                                            <path d="M31.8 62c16.6 0 30-13.4 30-30h-60c0 16.6 13.4 30 30 30"
+                                                fill="#f9f9f9">
+                                            </path>
+                                            <path d="M31.8 2c-16.6 0-30 13.4-30 30h60c0-16.6-13.4-30-30-30"
+                                                fill="#ed4c5c">
+                                            </path>
+                                        </g>
+                                    </svg>
+                                </div>
+                                <p class="!mr-1 text-base m-0">En</p>
+                            </div>
+                        </template>
+                        <template x-cloak x-if="locale == 'id'">
+                            <div class="relative flex flex-row items-center gap-x-1 rounded-full bg-green-400 w-[51px] h-[25px]">
+                                <p class="!ml-2 text-base m-0">Id</p>
+                                <div class="z-20 h-[25px] w-[25px] overflow-hidden rounded-full shadow-2xl transition-all"
+                                    :class="{
+                                        '-translate-x-[25px]': enter,
+                                        'translate-x-0': !enter
+                                    }">
+                                    <svg x-show="!enter" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"
+                                        xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img"
+                                        class="iconify iconify--emojione" preserveAspectRatio="xMidYMid meet"
+                                        fill="#000000">
+                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                        </g>
+                                        <g id="SVGRepo_iconCarrier">
+                                            <path d="M31.8 62c16.6 0 30-13.4 30-30h-60c0 16.6 13.4 30 30 30"
+                                                fill="#f9f9f9">
+                                            </path>
+                                            <path d="M31.8 2c-16.6 0-30 13.4-30 30h60c0-16.6-13.4-30-30-30"
+                                                fill="#ed4c5c">
+                                            </path>
+                                        </g>
+                                    </svg>
+                                    <svg class="w-[35px]" x-show="enter" xmlns="http://www.w3.org/2000/svg"
+                                        id="flag-icons-us" viewBox="0 0 640 480">
+                                        <path fill="#bd3d44" d="M0 0h640v480H0" />
+                                        <path stroke="#fff" stroke-width="37"
+                                            d="M0 55.3h640M0 129h640M0 203h640M0 277h640M0 351h640M0 425h640" />
+                                        <path fill="#192f5d" d="M0 0h364.8v258.5H0" />
+                                        <marker id="us-a" markerHeight="30" markerWidth="30">
+                                            <path fill="#fff" d="m14 0 9 27L0 10h28L5 27z" />
+                                        </marker>
+                                        <path fill="none" marker-mid="url(#us-a)"
+                                            d="m0 0 16 11h61 61 61 61 60L47 37h61 61 60 61L16 63h61 61 61 61 60L47 89h61 61 60 61L16 115h61 61 61 61 60L47 141h61 61 60 61L16 166h61 61 61 61 60L47 192h61 61 60 61L16 218h61 61 61 61 60z" />
+                                    </svg>
+                                </div>
+                                <p class="absolute right-1 text-base m-0">En</p>
+                            </div>
+                        </template>
+                    </div>
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
@@ -220,7 +324,7 @@
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
 
-                        <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+
 
 
                         <div class="topbar-divider d-none d-sm-block"></div>
@@ -423,7 +527,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script> -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -486,25 +590,6 @@
             });
         });
     </script>
-
-
-    {{-- <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        Livewire.on('openDeleteModal', () => {
-            let modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-            modal.show();
-        });
-
-        Livewire.on('closeDeleteModal', () => {
-            let modalEl = document.getElementById('deleteConfirmModal');
-            let modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        });
-    });
-</script> --}}
-
 
 </body>
 

@@ -1,9 +1,44 @@
 <?php
 
 use Livewire\Volt\Component;
+use Illuminate\Support\Facades;
+use App\Models\Menu;
+use Carbon\Carbon;
 
 new class extends Component {
-    //
+    public $menus;
+    public function mount()
+    {
+        $this->getMenu();
+    }
+
+    public function getMenu()
+    {
+        try {
+            // $menu = Menu::where('isActive', true)->with('pages')->get();
+            // $menu = Menu::where('isActive', true)
+            //     ->with([
+            //         'pages' => function ($query) {
+            //             $query->where('isReleased', true)->whereDate('release', '<=', Carbon::today());
+            //         },
+            //     ])
+            //     ->get();
+            $menu = Menu::where('isActive', true)
+                ->with([
+                    'pages' => function ($query) {
+                        $query->where('isReleased', true)->where(function ($q) {
+                            $q->whereNull('release')->orWhereDate('release', '<=', Carbon::today());
+                        });
+                    },
+                ])
+                ->get();
+
+            $this->menus = $menu->toArray();
+        } catch (\Exception $e) {
+            Log::error('Error fetching menus: ' . $e->getMessage());
+            $this->menus = [];
+        }
+    }
 }; ?>
 
 <header class="animate-fade-down nav-3:p-0 fixed top-0 z-50 w-full py-2" x-data="{
@@ -24,12 +59,18 @@ new class extends Component {
     get isInList() {
         return this.listTran.some(item => item.name === this.path);
     },
+    blackScreen: false,
+    menus: @entangle('menus'),
 }"
     @scroll.window="scrolled = window.scrollY > tinyLayer" x-init="scrolled = window.scrollY > 400">
     <div x-cloak
-        class="bg-primary border-primary-dark absolute left-0 top-0 h-full w-full border-b-2 shadow-2xl transition-all"
+        class="bg-primary border-primary-dark absolute left-0 top-0 z-10 h-full w-full border-b-2 shadow-2xl transition-all"
         x-show="scrolled || must_open || !isInList" x-transition:enter-start="opacity-0 -translate-y-10"
         x-transition:enter-end="opacity-100 translate-y-0"></div>
+    <div x-cloak class="absolute left-0 top-0 h-full w-full bg-black/30 shadow-2xl transition-all"
+        x-show="!scrolled || !must_open || isInList" x-transition:enter-start="opacity-0 -translate-y-10"
+        x-transition:enter-end="opacity-100 translate-y-0"></div>
+
     <div class="nav-2:px-10 mx-auto flex w-full max-w-[var(--max-width)] flex-row px-5 transition-all">
         <div class="text-primary z-10 flex w-[350px] cursor-pointer flex-row items-center justify-center gap-x-2 rounded-xl"
             @click.prevent="
@@ -56,9 +97,20 @@ new class extends Component {
                     closed() {
                         must_open = false;
                         this.open = '';
+                    },
+                    iniNav() {
+                        console.log('nav', this.menus);
+                    },
+                    resolvePath(itemPath, childPath) {
+                        try {
+                            new URL(childPath);
+                            return childPath;
+                        } catch (e) {
+                            return itemPath + childPath;
+                        }
                     }
                 
-                }" @mouseleave="closed">
+                }" @mouseleave="closed" x-init="iniNav">
 
                 <div
                     class="border-accent-white hover:border-secondary-warn group cursor-pointer overflow-hidden border-b-2">
@@ -85,7 +137,36 @@ new class extends Component {
                         </g>
                     </svg>
                 </div>
-                <div class="relative cursor-pointer py-10">
+                <template x-if="menus && menus.length > 0">
+                    <template x-for="(item, index) in menus" :key="item.id">
+                        <div class="relative cursor-pointer py-10">
+                            <template x-if="item.pages && item.pages.length > 0">
+                                <div class="flex flex-row items-center gap-x-1 transition-colors"
+                                    x-bind:class="open == item.id ? 'text-secondary-warn' : 'text-accent-white'"
+                                    @mouseenter="opened(item.id)">
+                                    <span x-text="item.name"></span>
+                                    <div class="flex flex-row">
+                                        <div class="bg-accent-white h-[2px] w-[10px] rounded-full transition-all"
+                                            x-bind:class="open == item.id ? 'rotate-0 bg-secondary-warn' : 'rotate-45 bg-accent-white'">
+                                        </div>
+                                        <div class="bg-accent-white relative right-1 h-[2px] w-[10px] rounded-full transition-all"
+                                            x-bind:class="open == item.id ? 'rotate-0 bg-secondary-warn' :
+                                                '-rotate-45 bg-accent-white'">
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="!item.pages || item.pages.length == 0">
+                                <div @click="goToPage(item.path)"
+                                    class="relative cursor-pointer px-2 text-xl before:absolute before:bottom-0 before:left-0 before:h-full before:w-full before:origin-bottom before:scale-y-[0.35] before:bg-green-500 before:transition-transform before:duration-500 before:ease-in-out hover:before:scale-y-100">
+                                    <span class="relative" x-text="item.name"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- <div class="relative cursor-pointer py-10">
                     <div class="flex flex-row items-center gap-x-1 transition-colors"
                         x-bind:class="open == 'about' ? 'text-secondary-warn' : 'text-accent-white'"
                         @mouseenter="opened('about')">
@@ -123,12 +204,28 @@ new class extends Component {
                                 x-bind:class="open == 'campus' ? 'rotate-0' : '-rotate-45'"></div>
                         </div>
                     </div>
-                </div>
-                <!-- display: grid
-;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 10px; -->
-                <div class="bg-primary-dark absolute left-0 top-full grid w-full grid-cols-2 flex-wrap gap-x-[10px]"
+                </div> -->
+
+                <template x-if="menus && menus.length > 0">
+                    <template x-for="(item, index) in menus" :key="">
+                        <div class="bg-primary-dark absolute left-0 top-full grid w-full grid-cols-2 flex-wrap gap-x-[10px]"
+                            x-show="open==item.id" x-transition x-cloak>
+                            <template x-if="item.pages && item.pages.length > 0">
+                                <template x-for="(child, col) in item.pages" :key="child.id">
+                                    <div class="hover:text-secondary-warn border-accent-white/20 hover:border-secondary-warn min-w-[200px] cursor-pointer border-b-2 border-dotted px-4 pb-2 pt-2 text-base transition-all"
+                                        @click="goToPage(resolvePath(item.path, child.path)); " x-text="child.name">
+                                    </div>
+                                </template>
+                            </template>
+                            <template x-if="!item.pages || item.pages.length === 0">
+                                <div class="hover:text-secondary-warn border-accent-white/20 hover:border-secondary-warn min-w-[200px] cursor-pointer border-b-2 border-dotted px-4 pb-2 pt-2 text-base transition-all"
+                                    @click="goToPage(item.path)" x-text="item.name">
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </template>
+                <!-- <div class="bg-primary-dark absolute left-0 top-full grid w-full grid-cols-2 flex-wrap gap-x-[10px]"
                     x-show="open=='about'" x-transition x-cloak>
                     <div
                         class="hover:text-secondary-warn border-accent-white/20 hover:border-secondary-warn min-w-[200px] cursor-pointer border-b-2 border-dotted px-4 pb-2 pt-2 text-base transition-all">
@@ -173,6 +270,7 @@ new class extends Component {
                         {{ __('nav.info.money') }}
                     </div>
                 </div>
+
                 <div x-cloak
                     class="bg-primary-dark absolute left-0 top-full grid w-full grid-cols-2 flex-wrap gap-x-[10px]"
                     x-show="open=='jurusan'" x-transition>
@@ -234,7 +332,9 @@ new class extends Component {
                         class="hover:text-secondary-warn border-accent-white/20 hover:border-secondary-warn min-w-[200px] cursor-pointer border-b-2 border-dotted px-4 pb-2 pt-2 text-base transition-all">
                         S2-Pendidikan Guru Vokasi
                     </div>
-                </div>
+                </div> -->
+
+
                 <!-- <div @click="goToPage('{{ route('profile') }}')">{{ __('nav.profile') }}</div>
             <div>PPID</div>
             <div>{{ __('nav.mutu_internal') }}</div>
@@ -340,7 +440,7 @@ new class extends Component {
                 </template>
             </div>
             <div class="nav-1:hidden text-accent-white bg-primary-dark hover:text-secondary-warn ml-3 block cursor-pointer overflow-hidden rounded-md p-2"
-                @click="$dispatch('navigation')">
+                @click="$dispatch('navigation', {menus})">
                 <svg class="h-[25px] w-[25px] transition-all hover:scale-150" viewBox="-0.5 0 25 25" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>

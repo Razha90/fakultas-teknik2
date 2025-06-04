@@ -16,7 +16,7 @@ class Dashboard extends Component
     #[Title('Dashboard Admin')]
     public function render()
     {
-        $viewData = Category::select('categories.name as category')->leftJoin('category_content', 'categories.id', '=', 'category_content.category_id')->leftJoin('contents', 'category_content.content_id', '=', 'contents.id')->selectRaw('categories.name as category, COALESCE(SUM(contents.views), 0) as total_views')->groupBy('categories.name')->get();
+        $viewData = Category::select('categories_raffi.name as category')->leftJoin('category_content', 'categories_raffi.id', '=', 'category_content.category_id')->leftJoin('contents', 'category_content.content_id', '=', 'contents.id')->selectRaw('categories_raffi.name as category, COALESCE(SUM(contents.views), 0) as total_views')->groupBy('categories_raffi.name')->get();
 
         return view('livewire.admin.dashboard', [
             'departments' => Department::count(),

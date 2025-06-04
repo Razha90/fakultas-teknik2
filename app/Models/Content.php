@@ -15,7 +15,7 @@ class Content extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', // Wajib karena kita isi UUID manual
+        'id',
         'title',
         'slug',
         'description',

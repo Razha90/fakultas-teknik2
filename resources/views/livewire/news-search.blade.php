@@ -5,6 +5,8 @@ use Livewire\Attributes\Layout;
 use App\Models\Content;
 use App\Models\Category;
 use Illuminate\Support\Facades\Log;
+use App\Models\News;
+use App\Models\Categories;
 
 new #[Layout('components.layouts.home')] class extends Component {
     public $category;
@@ -33,53 +35,67 @@ new #[Layout('components.layouts.home')] class extends Component {
     }
 
     public function fullSearch($search = '', $sort = 'asc', $page = 1, $limit = 10, $category = '', $dateStart = '', $dateWhen = '')
-{
-    try {
-        $this->loading = true;
+    {
+        try {
+            $this->loading = true;
 
-        // Validasi arah sorting
-        $sortDirection = in_array($sort, ['asc', 'desc']) ? $sort : 'asc';
+            // Validasi arah sorting
+            $sortDirection = in_array($sort, ['asc', 'desc']) ? $sort : 'asc';
 
-        $this->data = Content::with('categories') // ganti News:: menjadi Content::
-            ->when($search !== '', function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%");
-            })
-            ->when($category !== '', function ($q) use ($category) {
-                $q->whereHas('categories', function ($query) use ($category) {
-                    $query->where('name', 'like', "%{$category}%");
-                });
-            })
-            ->when($dateStart !== '', function ($q) use ($dateStart) {
-                $q->whereDate('created_at', '>=', $dateStart);
-            })
-            ->when($dateWhen !== '', function ($q) use ($dateWhen) {
-                $rangeDate = match ($dateWhen) {
-                    'day' => now()->subDay(),
-                    'week' => now()->subWeek(),
-                    'month' => now()->subMonth(),
-                    'year' => now()->subYear(),
-                    default => null,
-                };
-                if ($rangeDate) {
-                    $q->whereDate('created_at', '>=', $rangeDate);
-                }
-            })
-            ->orderBy('title', $sortDirection) // Sorting berdasarkan judul A-Z atau Z-A
-            ->paginate($limit, ['*'], 'page', $page)
-            ->toArray();
-
-        $this->loading = false;
-
-    } catch (\Throwable $th) {
-        Log::error($th);
-        $this->error = __('content.not_found'); // pastikan ada key ini di file terjemahan
+            // $this->data = Content::with('categories') // ganti News:: menjadi Content::
+            //     ->when($search !== '', function ($q) use ($search) {
+            //         $q->where('title', 'like', "%{$search}%");
+            //     })
+            //     ->when($category !== '', function ($q) use ($category) {
+            //         $q->whereHas('categories', function ($query) use ($category) {
+            //             $query->where('name', 'like', "%{$category}%");
+            //         });
+            //     })
+            //     ->when($dateStart !== '', function ($q) use ($dateStart) {
+            //         $q->whereDate('created_at', '>=', $dateStart);
+            //     })
+            //     ->when($dateWhen !== '', function ($q) use ($dateWhen) {
+            //         $rangeDate = match ($dateWhen) {
+            //             'day' => now()->subDay(),
+            //             'week' => now()->subWeek(),
+            //             'month' => now()->subMonth(),
+            //             'year' => now()->subYear(),
+            //             default => null,
+            //         };
+            //         if ($rangeDate) {
+            //             $q->whereDate('created_at', '>=', $rangeDate);
+            //         }
+            //     })
+            //     ->orderBy('title', $sortDirection) // Sorting berdasarkan judul A-Z atau Z-A
+            //     ->paginate($limit, ['*'], 'page', $page)
+            //     ->toArray();
+            $locale = app()->getLocale();
+            $this->data = News::with([
+                'categories',
+                'translations' => function ($query) use ($locale, $search) {
+                    $query->where('locale', $locale);
+                },
+            ])
+                ->where('status', 'published')
+                ->when($search !== '', function ($query) use ($search, $locale) {
+                    $query->whereHas('translations', function ($q) use ($search, $locale) {
+                        $q->where('locale', $locale)->where('title', 'like', "%{$search}%");
+                    });
+                })
+                // ->orderBy('title', $sortDirection)
+                ->paginate($limit, ['*'], 'page', $page)
+                ->toArray();
+            $this->loading = false;
+        } catch (\Throwable $th) {
+            Log::error($th);
+            $this->error = __('content.not_found'); // pastikan ada key ini di file terjemahan
+        }
     }
-}
 
     public function allCategory()
     {
         try {
-            $data = Category::all();
+            $data = Categories::with('translations')->all();
             if ($data->isEmpty()) {
                 return [
                     'error' => false,
@@ -270,7 +286,7 @@ new #[Layout('components.layouts.home')] class extends Component {
                             } catch (error) {
                                 console.error(error);
                             }
-
+                    
                         }
                     }"
                         class="bg-accent-white border-accent-white overflow-hidden rounded-xl border"
@@ -349,7 +365,7 @@ new #[Layout('components.layouts.home')] class extends Component {
             </div>
         </div>
 
-        <div class="mx-auto flex max-w-[var(--max-width)] flex-row items-start ftnews-1:px-10 px-0">
+        <div class="ftnews-1:px-10 mx-auto flex max-w-[var(--max-width)] flex-row items-start px-0">
             <div class="sticky top-[160px] hidden h-full xl:block">
                 <livewire:component.news-recomendation />
             </div>
@@ -358,10 +374,9 @@ new #[Layout('components.layouts.home')] class extends Component {
                     <template x-if="datas && Array.isArray(datas.data) && datas.data.length > 0 && !loading">
                         <template x-for="(data, index) in datas.data" :key="index">
                             <div x-data="{ hovered: false }"
-                                class="relative aspect-[16/9] ftnews-1:w-[405px] w-full cursor-pointer overflow-hidden ftnews-1:rounded-md rounded-none"
+                                class="ftnews-1:w-[405px] ftnews-1:rounded-md relative aspect-[16/9] w-full cursor-pointer overflow-hidden rounded-none"
                                 @click="goToNews(data.id)" @mouseenter="hovered=true" @mouseleave="hovered=false">
-                                <img x-bind:class="hovered ? 'scale-110' : 'scale-100'" x-bind:src="`/storage/${data.image}`"
-                                    alt="data.title"
+                                <img x-bind:class="hovered ? 'scale-110' : 'scale-100'" x-bind:src="data.image"
                                     class="absolute inset-0 left-0 top-0 h-full w-full object-cover transition-all" />
                                 <div x-bind:class="hovered ? 'opacity-0' : 'opacity-100'"
                                     class="absolute bottom-0 left-0 right-0 z-10 h-full bg-gradient-to-t from-black/80 to-black/10 transition-all">
@@ -369,7 +384,7 @@ new #[Layout('components.layouts.home')] class extends Component {
 
                                 <div x-bind:class="hovered ? 'opacity-0' : 'opacity-100'"
                                     class="absolute bottom-2 right-0 z-20 flex h-[85px] w-full flex-col justify-between px-2 text-center shadow-xl transition-all">
-                                    <h3 x-text="data.title"
+                                    <h3 x-text="data.translations[0]?.title"
                                         class="text-accent-white font-semi-bold line-clamp-2 text-xl">
                                     </h3>
                                     <div class="flex flex-row items-center justify-start gap-x-1 text-[10px]">
@@ -411,8 +426,7 @@ new #[Layout('components.layouts.home')] class extends Component {
                 <div class="mt-10 flex justify-center">
                     <template x-if="pagination && pagination.length > 0">
                         <div class="animate-fade inline-flex h-10 -space-x-px text-center text-base">
-                            <button
-                                @click.prevent="datas.current_page == 1 ? '' : page = page - 1"
+                            <button @click.prevent="datas.current_page == 1 ? '' : page = page - 1"
                                 class="ms-0 flex h-10 items-center justify-center rounded-s-lg border border-e-0 border-gray-300 px-4 leading-tight"
                                 x-bind:class="datas.current_page == 1 ? 'cursor-not-allowed text-gray-700 bg-gray-100' :
                                     'cursor-pointer hover:bg-gray-100 hover:text-gray-700 bg-white text-gray-500'">
@@ -432,7 +446,8 @@ new #[Layout('components.layouts.home')] class extends Component {
                                 </button>
                             </template>
                             <button @click.prevent="datas.current_page == datas.last_page ? '' : page = page + 1"
-                                class="flex h-10 items-center justify-center rounded-e-lg border border-gray-300 px-4 leading-tight"  x-bind:class="datas.current_page == datas.last_page ? 'cursor-not-allowed text-gray-700 bg-gray-100' :
+                                class="flex h-10 items-center justify-center rounded-e-lg border border-gray-300 px-4 leading-tight"
+                                x-bind:class="datas.current_page == datas.last_page ? 'cursor-not-allowed text-gray-700 bg-gray-100' :
                                     'cursor-pointer hover:bg-gray-100 hover:text-gray-700 bg-white text-gray-500'">
                                 <span class="sr-only">Next</span>
                                 <svg class="h-3 w-3 rtl:rotate-180" aria-hidden="true"
@@ -582,7 +597,7 @@ new #[Layout('components.layouts.home')] class extends Component {
                         } catch (error) {
                             console.error('Error in clickedCat:', error);
                         }
-
+                
                     }
                 }"
                     class="bg-accent-white border-accent-white mt-5 select-none overflow-hidden rounded-xl border"
@@ -778,8 +793,8 @@ new #[Layout('components.layouts.home')] class extends Component {
                     }
                 });
             },
-            fullSearch() {
-                this.$wire.fullSearch(
+            async fullSearch() {
+                await this.$wire.fullSearch(
                     this.search,
                     this.sort,
                     this.page,
@@ -788,6 +803,8 @@ new #[Layout('components.layouts.home')] class extends Component {
                     this.dateStart,
                     this.dateWhen
                 );
+                console.log('datas', this.datas);
+
             },
             changeDate(createdAt) {
                 const formattedTime = moment(createdAt).fromNow();

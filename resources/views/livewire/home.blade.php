@@ -20,148 +20,228 @@ new #[Layout('components.layouts.home')] class extends Component {
         $this->getMBKM();
         $this->getEvent();
         $this->getPengumuman();
+        return;
     }
-private function getNews()
-{
-    try {
-        $newsCollection = Content::with('type') // ambil relasi jenis konten
-            ->whereHas('type', function ($query) {
-                $query->whereIn('name', ['Berita', 'FT News', 'MBKM News']);
-            })
-            ->where('status', 'published') // hanya status published
-            ->orderBy('published_at', 'desc')
-            ->take(3)
-            ->get();
 
-        // dd($newsCollection);
-
-        if ($newsCollection->isEmpty()) {
-            $this->dispatch('failed', ['message' => __('news.not_found')]);
-        } else {
-            $this->news = $newsCollection->toArray();
-        }
-    } catch (\Throwable $th) {
-        // dd('Error:', $th->getMessage(), $th->getLine(), $th->getFile());
-        $this->dispatch('failed', ['message' => 'Failed Get News']);
-        Log::error('Failed Get News', [
-            'error' => $th->getMessage(),
-            'line' => $th->getLine(),
-            'file' => $th->getFile(),
-        ]);
-    }
-}
-
-
-private function getMBKM()
-{
-    try {
-        $mbkmCollection = Content::with('type')
-            ->whereHas('type', function ($query) {
-                $query->where('name', 'MBKM News');
-            })
-            ->where('status', 'published')
-            ->orderBy('published_at', 'desc')
-            ->take(5)
-            ->get();
-
-        if ($mbkmCollection->isEmpty()) {
-            $this->dispatch('failed', ['message' => __('news.not_found')]);
-        } else {
-            $this->mbkm = $mbkmCollection->toArray();
-        }
-    } catch (\Throwable $th) {
-        $this->dispatch('failed', ['message' => 'Failed Get MBKM News']);
-        Log::error('Failed Get MBKM News', [
-            'error' => $th->getMessage(),
-            'line' => $th->getLine(),
-            'file' => $th->getFile(),
-        ]);
-    }
-}
-
-private function getEvent()
-{
-    try {
-        $eventCollection = Content::with('type')
-            ->whereHas('type', function ($query) {
-                $query->where('name', 'FT Event');
-            })
-            ->where('status', 'published')
-            ->orderBy('published_at', 'desc')
-            ->take(5)
-            ->get();
-
-        if ($eventCollection->isEmpty()) {
-            $this->dispatch('failed', ['message' => __('news.not_found')]);
-        } else {
-            $this->events = $eventCollection->toArray();
-        }
-    } catch (\Throwable $th) {
-        $this->dispatch('failed', ['message' => 'Failed Get Event News']);
-        Log::error('Failed Get Event News', [
-            'error' => $th->getMessage(),
-            'line' => $th->getLine(),
-            'file' => $th->getFile(),
-        ]);
-    }
-}
-
-private function getPengumuman()
-{
-    try {
-        $pengumumanCollection = Content::with('type')
-            ->whereHas('type', function ($query) {
-                $query->where('name', 'Pengumuman FT');
-            })
-            ->where('status', 'published')
-            ->orderBy('published_at', 'desc')
-            ->take(5)
-            ->get();
-
-        if ($pengumumanCollection->isEmpty()) {
-            $this->dispatch('failed', ['message' => __('news.not_found')]);
-        } else {
-            $this->pengumuman = $pengumumanCollection->toArray();
-        }
-    } catch (\Throwable $th) {
-        $this->dispatch('failed', ['message' => 'Failed Get Pengumuman']);
-        Log::error('Failed Get Pengumuman', [
-            'error' => $th->getMessage(),
-            'line' => $th->getLine(),
-            'file' => $th->getFile(),
-        ]);
-    }
-}
-
-
-    public function createNews()
+    private function getNews()
     {
         try {
-            $user = User::get()->first();
-            $news = new News();
-            $news->user_id = $user->id;
-            $news->title = 'New Title';
-            $news->content = 'New Content';
-            $news->image = 'https://i.ytimg.com/vi/9zB01qk3M-w/maxresdefault.jpg';
-            $news->save();
+            $locale = app()->getLocale();
+            // $newsCollection = News::with('translations', 'categories')
+            //     ->where('status', 'published')
+            //     ->orderBy('created_at', 'desc')
+            //     ->take(3)
+            //     ->get();
+            $newsCollection = News::with([
+                'translations' => function ($query) use ($locale) {
+                    $query->where('locale', $locale);
+                },
+                'categories',
+            ])
+                ->where('status', 'published')
+                ->orderBy('created_at', 'desc')
+                ->take(3)
+                ->get();
 
-            $category = Category::orderBy('created_at', 'desc')->first();
+            // dd($newsCollection);
 
-            CategoryNews::create([
-                'news_id' => $news->id,
-                'category_id' => $category->id,
-            ]);
+            if ($newsCollection->isEmpty()) {
+                $this->dispatch('failed', ['message' => __('news.not_found')]);
+            } else {
+                $this->news = $newsCollection->toArray();
+            }
         } catch (\Throwable $th) {
-            Log::error('Error creating news: ' . $th->getMessage());
+            // dd('Error:', $th->getMessage(), $th->getLine(), $th->getFile());
+            $this->dispatch('failed', ['message' => 'Failed Get News']);
+            Log::error('Failed Get News', [
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+                'file' => $th->getFile(),
+            ]);
         }
     }
 
-    public function makeCategory()
+    // private function getNews()
+    // {
+    //     try {
+    //         $newsCollection = Content::with('type') // ambil relasi jenis konten
+    //             ->whereHas('type', function ($query) {
+    //                 $query->whereIn('name', ['Berita', 'FT News', 'MBKM News']);
+    //             })
+    //             ->where('status', 'published') // hanya status published
+    //             ->orderBy('published_at', 'desc')
+    //             ->take(3)
+    //             ->get();
+
+    //         // dd($newsCollection);
+
+    //         if ($newsCollection->isEmpty()) {
+    //             $this->dispatch('failed', ['message' => __('news.not_found')]);
+    //         } else {
+    //             $this->news = $newsCollection->toArray();
+    //         }
+    //     } catch (\Throwable $th) {
+    //         // dd('Error:', $th->getMessage(), $th->getLine(), $th->getFile());
+    //         $this->dispatch('failed', ['message' => 'Failed Get News']);
+    //         Log::error('Failed Get News', [
+    //             'error' => $th->getMessage(),
+    //             'line' => $th->getLine(),
+    //             'file' => $th->getFile(),
+    //         ]);
+    //     }
+    // }
+
+    private function getMBKM()
     {
-        $category = new Category();
-        $category->name = 'MBKM';
-        $category->save();
+        try {
+            // $mbkmCollection = Content::with('type')
+            //     ->whereHas('type', function ($query) {
+            //         $query->where('name', 'MBKM News');
+            //     })
+            //     ->where('status', 'published')
+            //     ->orderBy('published_at', 'desc')
+            //     ->take(5)
+            //     ->get();
+            $locale = app()->getLocale();
+
+            $mbkmCollection = News::with([
+                'translations' => function ($query) use ($locale) {
+                    $query->where('locale', $locale);
+                },
+                'categories.translations' => function ($query) use ($locale) {
+                    $query->where('locale', $locale);
+                },
+            ])
+                ->where('status', 'published')
+                ->whereHas('categories.translations', function ($query) use ($locale) {
+                    $query->where('locale', $locale)->where('name', 'MBKM');
+                })
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+
+            if ($mbkmCollection->isEmpty()) {
+                $this->dispatch('failed', ['message' => __('news.not_found')]);
+            } else {
+                $this->mbkm = $mbkmCollection->toArray();
+            }
+        } catch (\Throwable $th) {
+            $this->dispatch('failed', ['message' => 'Failed Get MBKM News']);
+            Log::error('Failed Get MBKM News', [
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+                'file' => $th->getFile(),
+            ]);
+        }
     }
+
+    private function getEvent()
+    {
+        try {
+            // $eventCollection = Content::with('type')
+            //     ->whereHas('type', function ($query) {
+            //         $query->where('name', 'FT Event');
+            //     })
+            //     ->where('status', 'published')
+            //     ->orderBy('published_at', 'desc')
+            //     ->take(5)
+            //     ->get();
+            $locale = app()->getLocale();
+            $eventCollection = News::with([
+                'translations' => function ($query) use ($locale) {
+                    $query->where('locale', $locale);
+                },
+                'categories.translations' => function ($query) use ($locale) {
+                    $query->where('locale', $locale);
+                },
+            ])
+                ->where('status', 'published')
+                ->whereHas('categories.translations', function ($query) use ($locale) {
+                    $query->where('locale', $locale)->where('name', 'Events');
+                })
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+
+            if ($eventCollection->isEmpty()) {
+                $this->dispatch('failed', ['message' => __('news.not_found')]);
+            } else {
+                $this->events = $eventCollection->toArray();
+            }
+        } catch (\Throwable $th) {
+            $this->dispatch('failed', ['message' => 'Failed Get Event News']);
+            Log::error('Failed Get Event News', [
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+                'file' => $th->getFile(),
+            ]);
+        }
+    }
+
+    private function getPengumuman()
+    {
+        try {
+            $locale = app()->getLocale();
+            $name = $locale == 'en' ? 'Announcement FT' : 'Pengumuman FT';
+            $pengumumanCollection = News::with([
+                'translations' => function ($query) use ($locale) {
+                    $query->where('locale', $locale);
+                },
+                'categories.translations' => function ($query) use ($locale) {
+                    $query->where('locale', $locale);
+                },
+            ])
+                ->where('status', 'published')
+                ->whereHas('categories.translations', function ($query) use ($locale, $name) {
+                    $query->where('locale', $locale)->where('name', $name);
+                })
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+
+            if ($pengumumanCollection->isEmpty()) {
+                $this->dispatch('failed', ['message' => __('news.not_found')]);
+            } else {
+                $this->pengumuman = $pengumumanCollection->toArray();
+            }
+        } catch (\Throwable $th) {
+            $this->dispatch('failed', ['message' => 'Failed Get Pengumuman']);
+            Log::error('Failed Get Pengumuman', [
+                'error' => $th->getMessage(),
+                'line' => $th->getLine(),
+                'file' => $th->getFile(),
+            ]);
+        }
+    }
+
+    // public function createNews()
+    // {
+    //     try {
+    //         $user = User::get()->first();
+    //         $news = new News();
+    //         $news->user_id = $user->id;
+    //         $news->title = 'New Title';
+    //         $news->content = 'New Content';
+    //         $news->image = 'https://i.ytimg.com/vi/9zB01qk3M-w/maxresdefault.jpg';
+    //         $news->save();
+
+    //         $category = Category::orderBy('created_at', 'desc')->first();
+
+    //         CategoryNews::create([
+    //             'news_id' => $news->id,
+    //             'category_id' => $category->id,
+    //         ]);
+    //     } catch (\Throwable $th) {
+    //         Log::error('Error creating news: ' . $th->getMessage());
+    //     }
+    // }
+
+    // public function makeCategory()
+    // {
+    //     $category = new Category();
+    //     $category->name = 'MBKM';
+    //     $category->save();
+    // }
 }; ?>
 
 <div x-data="initHome" x-init="init">
@@ -195,19 +275,21 @@ private function getPengumuman()
                     <video x-intersect="blackScreen=true" x-cloak x-show="svgLoaded" autoplay muted loop playsinline
                         class="animate-fade absolute inset-0 z-10 h-full w-full object-cover" @canplay="play = true"
                         x-init="play = false" :class="{ 'hidden': !play }">
-                        <source src="{{ asset('vid/ft (1).mp4') }}" type="video/mp4">
+                        <source src="{{ asset('vid/ft unimed.mp4') }}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
-                    <div x-show="!blackScreen" class="animate-fade absolute left-0 top-0 z-30 h-[120%] w-full bg-black/40">
+                    <div x-show="!blackScreen"
+                        class="animate-fade absolute left-0 top-0 z-30 h-[120%] w-full bg-black/40">
                     </div>
                     <div class="absolute inset-0 z-0 flex items-center justify-center">
                         <div class="rounded-tr-2xl bg-transparent px-2 py-2 text-white" x-data="{ shown: false }"
                             x-intersect="shown = true">
-                            <div x-show="shown" class="text-center sm:text-8xl text-4xl font-bold">
+                            <div x-show="shown" class="text-center text-4xl font-bold sm:text-8xl">
                                 <p class="animate-fade tracking-widest">FAKULTAS</p>
                                 <p class="animate-delay-200 animate-fade tracking-widest">TEKNIK</p>
                             </div>
-                            <p x-show="shown" class="animate-delay-400 animate-fade max-w-xl text-center sm:text-xl text-sm">
+                            <p x-show="shown"
+                                class="animate-delay-400 animate-fade max-w-xl text-center text-sm sm:text-xl">
                                 {{ __('home.welcome') }}
                             </p>
                         </div>
@@ -454,20 +536,26 @@ private function getPengumuman()
                 </div>
             </template>
             <template x-cloak x-if="news && Array.isArray(news) && news.length > 0">
-                <div class="mx-auto flex flex-row flex-wrap items-start justify-center gap-x-7 gap-y-7 ftnews-1:px-5 px-0"
+                <div class="ftnews-1:px-5 mx-auto flex flex-row flex-wrap items-start justify-center gap-x-7 gap-y-7 px-0"
                     x-intersect="scrolled=true">
                     <template x-cloak x-for="(data, i) in news" :key="i">
-                        <div class="group ftnews-1:w-[405px] w-full cursor-pointer"
+                        <div class="ftnews-1:w-[405px] group w-full cursor-pointer"
                             x-bind:class="scrolled ? `animate-delay-${i*2}00 animate-fade` : 'opacity-0'"
                             @click="goToNews(data.id)">
                             <div
                                 class="flex h-64 w-full items-center justify-center overflow-hidden rounded-sm bg-gray-300">
-                                <img :src="`/storage/${data.image}`" alt="data.title"
+                                <img :src="data.image"
+                                    :alt="data.translations && data.translations.length > 0 && data.translations[0].title ?
+                                        data.translations[0].title :
+                                        '{{ __('news.none.translate') }}'"
                                     class="h-full w-full object-cover transition-all group-hover:scale-125" />
                             </div>
                             <div class="px-2">
                                 <p class="text-primary-dark group-hover:text-primary-light my-2 line-clamp-2 text-xl"
-                                    x-text="data.title"></p>
+                                    x-text="data.translations && data.translations.length > 0 && data.translations[0].title
+        ? data.translations[0].title
+        : '{{ __('news.none.translate') }}'">
+                                </p>
                                 <div
                                     class="text-primary-dark group-hover:text-primary-light flex flex-row items-center justify-start gap-x-1">
                                     <svg class="h-[25px] w-[25px]" viewBox="0 0 24 24" fill="none"
@@ -537,14 +625,17 @@ private function getPengumuman()
                                 @click="goToNews(data.id)"
                                 x-bind:class="scrolled ? `animate-fade-right animate-delay-${i*2}00 opacity-100` : 'opacity-0'">
                                 <p x-text="formatDate(data.created_at)" class="text-primary text-sm"></p>
-                                <p x-text="data.title" class="text-primary-dark line-clamp-3 text-lg"></p>
+                                <p x-text="data.translations && data.translations.length > 0 && data.translations[0].title
+        ? data.translations[0].title
+        : '{{ __('news.none.translate') }}'"
+                                    class="text-primary-dark line-clamp-3 text-lg"></p>
                             </div>
                         </template>
                     </template>
                 </div>
             </div>
-            <div class="relative bg-primary event-1:w-[405px] w-[500px] px-5 py-10 xl:bg-transparent" x-data="{ scrolled: false }"
-                x-intersect="scrolled = true">
+            <div class="bg-primary event-1:w-[405px] relative w-[500px] px-5 py-10 xl:bg-transparent"
+                x-data="{ scrolled: false }" x-intersect="scrolled = true">
                 <img class="absolute left-0 top-0 z-10 block h-full w-full object-cover opacity-10 xl:hidden"
                     src="{{ asset('img/bg-poly.svg') }}" />
                 <div class="event-1:text-left relative z-20 text-center">
@@ -578,7 +669,10 @@ private function getPengumuman()
                                         class="text-primary-dark bg-accent-white text-center text-2xl font-bold">
                                     </p>
                                 </div>
-                                <p x-text="data.title" class="text-accent-white line-clamp-3 text-xl"></p>
+                                <p x-text="data.translations && data.translations.length > 0 && data.translations[0].title
+        ? data.translations[0].title
+        : '{{ __('news.none.translate') }}'"
+                                    class="text-accent-white line-clamp-3 text-xl"></p>
                             </div>
                         </template>
                     </template>
@@ -611,7 +705,10 @@ private function getPengumuman()
                                 @click="goToNews(data.id)"
                                 x-bind:class="scrolled ? `animate-fade-right animate-delay-${i*2}00 opacity-100` : 'opacity-0'">
                                 <p x-text="formatDate(data.created_at)" class="text-primary text-sm"></p>
-                                <p x-text="data.title" class="text-primary-dark line-clamp-3 text-lg"></p>
+                                <p x-text="data.translations && data.translations.length > 0 && data.translations[0].title
+        ? data.translations[0].title
+        : '{{ __('news.none.translate') }}'"
+                                    class="text-primary-dark line-clamp-3 text-lg"></p>
                             </div>
                         </template>
                     </template>
@@ -629,12 +726,13 @@ private function getPengumuman()
             mbkm: @entangle('mbkm').live,
             events: @entangle('events').live,
             pengumuman: @entangle('pengumuman').live,
+
             stopRun: false,
-            init() {
+            async init() {
                 if (this.stopRun) return;
                 this.stopRun = true;
-                this.$wire.running();
-
+                await this.$wire.running();
+                console.log('Pengumuman', this.pengumuman);
             },
             changeDate(createdAt) {
                 const formattedTime = moment(createdAt).fromNow();

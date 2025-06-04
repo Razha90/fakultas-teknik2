@@ -94,4 +94,9 @@ class User extends Authenticatable
         return $this->hasMany(Page::class);
     }
 
+    public function menus()
+    {
+        return $this->hasMany(Menu::class);
+    }
+
 }

@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\Content;
+use App\Models\News;    
 use Illuminate\Support\Facades\Log;
 
 new class extends Component {
@@ -14,46 +15,11 @@ new class extends Component {
         $this->getNews();
     }
 
-    private function getNews()
-    {
+    private function getNews() {
         try {
-            // Ambil 3 content terbaru dari kategori yang namanya mengandung "News"
-            $newsCollection = Content::with('categories')
-                ->whereHas('categories', function ($query) {
-                    $query->where('name', 'like', '%News%');
-                })
-                ->orderBy('published_at', 'desc') // gunakan published_at jika itu tanggal publikasi
+            $this->news = News::with('translations')
+                ->orderBy('created_at', 'desc') 
                 ->take(3)
-                ->get();
-
-            if ($newsCollection->isEmpty()) {
-                $this->dispatch('failed', ['message' => __('news.not_found')]);
-            } else {
-                $this->news = $newsCollection->toArray();
-            }
-
-            // Ambil 3 related posts dari kategori yang sama dengan first content
-            if ($this->news && count($this->news) > 0) {
-                $firstContentId = $this->news[0]['id'];
-                $firstContent = Content::with('categories')->find($firstContentId);
-
-                if ($firstContent) {
-                    $categoryIds = $firstContent->categories->pluck('id')->toArray();
-
-                    $this->relatedNews = Content::whereHas('categories', function ($q) use ($categoryIds) {
-                        $q->whereIn('id', $categoryIds);
-                    })
-                    ->where('id', '!=', $firstContentId)
-                    ->orderBy('published_at', 'desc')
-                    ->take(3)
-                    ->get()
-                    ->toArray();
-                }
-            }
-
-            // Ambil 4 content terpopuler berdasarkan views
-            $this->popularNews = Content::orderBy('views', 'desc')
-                ->take(4)
                 ->get()
                 ->toArray();
 
@@ -66,10 +32,62 @@ new class extends Component {
             ]);
         }
     }
+
+    // private function getNews()
+    // {
+    //     try {
+    //         $newsCollection = Content::with('categories')
+    //             ->whereHas('categories', function ($query) {
+    //                 $query->where('name', 'like', '%News%');
+    //             })
+    //             ->orderBy('published_at', 'desc') // gunakan published_at jika itu tanggal publikasi
+    //             ->take(3)
+    //             ->get();
+
+    //         if ($newsCollection->isEmpty()) {
+    //             $this->dispatch('failed', ['message' => __('news.not_found')]);
+    //         } else {
+    //             $this->news = $newsCollection->toArray();
+    //         }
+
+    //         // Ambil 3 related posts dari kategori yang sama dengan first content
+    //         if ($this->news && count($this->news) > 0) {
+    //             $firstContentId = $this->news[0]['id'];
+    //             $firstContent = Content::with('categories')->find($firstContentId);
+
+    //             if ($firstContent) {
+    //                 $categoryIds = $firstContent->categories->pluck('id')->toArray();
+
+    //                 $this->relatedNews = Content::whereHas('categories', function ($q) use ($categoryIds) {
+    //                     $q->whereIn('id', $categoryIds);
+    //                 })
+    //                 ->where('id', '!=', $firstContentId)
+    //                 ->orderBy('published_at', 'desc')
+    //                 ->take(3)
+    //                 ->get()
+    //                 ->toArray();
+    //             }
+    //         }
+
+    //         // Ambil 4 content terpopuler berdasarkan views
+    //         $this->popularNews = Content::orderBy('views', 'desc')
+    //             ->take(4)
+    //             ->get()
+    //             ->toArray();
+
+    //     } catch (\Throwable $th) {
+    //         $this->dispatch('failed', ['message' => 'Failed Get News']);
+    //         Log::error('Failed Get News', [
+    //             'error' => $th->getMessage(),
+    //             'line' => $th->getLine(),
+    //             'file' => $th->getFile(),
+    //         ]);
+    //     }
+    // }
 };
 ?>
 
-<section class="mb-10" x-data="initHome">
+<section class="mb-10" x-data="initHome" x-init="console.log(news)">
     <div class="linked-1:mt-14 mx-auto mt-8 max-w-[--max-width]" x-data="{ scrolled: false }">
         <template x-cloak x-if="!news || (Array.isArray(news) && news.length === 0)">
             <div class="flex flex-row flex-wrap items-center justify-center gap-x-7 gap-y-7 px-10">
@@ -97,12 +115,14 @@ new class extends Component {
                         @click="goToNews(data.id)">
                         <div
                             class="flex h-64 w-full items-center justify-center overflow-hidden rounded-sm bg-gray-300">
-                            <img :src="`/storage/${data.image}`" alt="data.title"
+                            <img :src="data.image"
                                 class="h-full w-full object-cover transition-all group-hover:scale-125" />
                         </div>
                         <div class="px-2">
                             <p class="text-primary-dark group-hover:text-primary-light my-2 line-clamp-2 text-xl"
-                                x-text="data.title"></p>
+                                x-text="data.translations && data.translations.length > 0 && data.translations[0].title ?
+                                        data.translations[0].title :
+                                        '{{ __('news.none.translate') }}'"></p>
                             <div
                                 class="text-primary-dark group-hover:text-primary-light flex flex-row items-center justify-start gap-x-1">
                                 <svg class="h-[25px] w-[25px]" viewBox="0 0 24 24" fill="none"
@@ -137,10 +157,11 @@ new class extends Component {
         return {
             news: @entangle('news').live,
             stopRun: false,
-            init() {
+            async init() {
                 if (this.stopRun) return;
                 this.stopRun = true;
-                this.$wire.running();
+                await this.$wire.running();
+                console.log('lawak', this.news);
 
             },
             changeDate(createdAt) {
